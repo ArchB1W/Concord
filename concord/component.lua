@@ -6,14 +6,15 @@ local PATH = (...):gsub('%.[^%.]+$', '')
 local Components = require(PATH..".components")
 local Utils      = require(PATH..".utils")
 
+---@class ConcordComponent
 local Component = {}
 Component.__mt = {
    __index = Component,
 }
 
 --- Creates a new ComponentClass.
--- @tparam function populate Function that populates a Component with values
--- @treturn Component A new ComponentClass
+---@param populate fun(...): ConcordComponent Function that populates a Component with values
+---@return ConcordComponent
 function Component.new(name, populate)
    if (type(name) ~= "string") then
       Utils.error(2, "bad argument #1 to 'Component.new' (string expected, got %s)", type(name))
@@ -74,8 +75,8 @@ function Component:deserialize(data)
 end
 
 -- Internal: Creates a new Component.
--- @param entity The Entity that will receive this Component.
--- @return A new Component
+---@param entity ConcordEntity The Entity that will receive this Component.
+---@return ConcordComponent A new Component
 function Component:__new(entity)
    local component = setmetatable({
       __componentClass = self,
@@ -89,9 +90,9 @@ function Component:__new(entity)
 end
 
 -- Internal: Creates and populates a new Component.
--- @param entity The Entity that will receive this Component.
--- @param ... Varargs passed to the populate function
--- @return A new populated Component
+---@param entity ConcordEntity The Entity that will receive this Component.
+---@param ... any Varargs passed to the populate function
+---@return ConcordComponent A new populated Component
 function Component:__initialize(entity, ...)
    local component = self:__new(entity)
 
@@ -102,18 +103,19 @@ function Component:__initialize(entity, ...)
 end
 
 --- Returns true if the Component has a name.
--- @treturn boolean
+---@return boolean
 function Component:hasName()
    return self.__name and true or false
 end
 
 --- Returns the name of the Component.
--- @treturn string
+---@return string
 function Component:getName()
    return self.__name
 end
 
 return setmetatable(Component, {
+    ---@return ConcordComponent
    __call = function(_, ...)
       return Component.new(...)
    end,

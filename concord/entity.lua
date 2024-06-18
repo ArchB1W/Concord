@@ -12,6 +12,7 @@ local Utils      = require(PATH..".utils")
 local Builtins   = require(PATH..".builtins.init") --luacheck: ignore
 -- Builtins is unused but the require already registers the Components
 
+---@class ConcordEntity
 local Entity = {
    SERIALIZE_BY_DEFAULT = true,
 }
@@ -21,8 +22,8 @@ Entity.__mt = {
 }
 
 --- Creates a new Entity. Optionally adds it to a World.
--- @tparam[opt] World world World to add the entity to
--- @treturn Entity A new Entity
+---@param world ConcordWorld? World to add the entity to
+---@return ConcordEntity
 function Entity.new(world)
    if (world ~= nil and not Type.isWorld(world)) then
       Utils.error(2, "bad argument #1 to 'Entity.new' (world/nil expected, got %s)", type(world))
@@ -45,6 +46,11 @@ function Entity.new(world)
    return e
 end
 
+---@param e ConcordEntity
+---@param name string
+---@param componentClass ConcordComponent
+---@param ... any Component Class Initializer Args
+---@return nil
 local function createComponent(e, name, componentClass, ...)
    local component = componentClass:__initialize(e, ...)
    local hadComponent = not not e[name]
@@ -60,6 +66,9 @@ local function createComponent(e, name, componentClass, ...)
    end
 end
 
+---@param e ConcordEntity
+---@param name string
+---@param componentData ?????????
 local function deserializeComponent(e, name, componentData)
    local componentClass = Components[name]
    local hadComponent = not not e[name]
@@ -78,6 +87,9 @@ local function deserializeComponent(e, name, componentData)
    end
 end
 
+---@param e ConcordEntity
+---@param ensure boolean
+---@param name string
 local function giveComponent(e, ensure, name, ...)
    local component
    if Type.isComponent(name) then
@@ -102,7 +114,7 @@ local function giveComponent(e, ensure, name, ...)
       end
 
       deserializeComponent(e, name, data)
-   else 
+   else
       createComponent(e, name, componentClass, ...)
    end
 
@@ -110,6 +122,9 @@ local function giveComponent(e, ensure, name, ...)
 end
 
 
+---@param e ConcordEntity
+---@param name string
+---@return nil
 local function removeComponent(e, name)
    if e[name] then
       e[name]:removed(false)
@@ -122,25 +137,25 @@ end
 
 --- Gives an Entity a Component.
 -- If the Component already exists, it's overridden by this new Component
--- @tparam Component componentClass ComponentClass to add an instance of
--- @param ... additional arguments to pass to the Component's populate function
--- @treturn Entity self
+---@param name string
+---@param ... any additional arguments to pass to the Component's populate function
+---@return ConcordEntity
 function Entity:give(name, ...)
    return giveComponent(self, false, name, ...)
 end
 
 --- Ensures an Entity to have a Component.
 -- If the Component already exists, no action is taken
--- @tparam Component componentClass ComponentClass to add an instance of
--- @param ... additional arguments to pass to the Component's populate function
--- @treturn Entity self
+---@param name string
+---@param ... any additional arguments to pass to the Component's populate function
+---@return ConcordEntity
 function Entity:ensure(name, ...)
    return giveComponent(self, true, name, ...)
 end
 
 --- Removes a Component from an Entity.
--- @tparam Component componentClass ComponentClass of the Component to remove
--- @treturn Entity self
+---@param name string
+---@return ConcordEntity
 function Entity:remove(name)
    local ok, componentClass = Components.try(name)
 
@@ -154,9 +169,9 @@ function Entity:remove(name)
 end
 
 --- Assembles an Entity.
--- @tparam function assemblage Function that will assemble an entity
--- @param ... additional arguments to pass to the assemblage function.
--- @treturn Entity self
+---@param assemblage fun(...): ConcordEntity Function that will assemble an entity
+---@param ... any additional arguments to pass to the assemblage function.
+---@return ConcordEntity self
 function Entity:assemble(assemblage, ...)
    if type(assemblage) ~= "function" then
       Utils.error(2, "bad argument #1 to 'Entity:assemble' (function expected, got %s)", type(assemblage))
@@ -167,9 +182,9 @@ function Entity:assemble(assemblage, ...)
    return self
 end
 
---- Destroys the Entity.
+-- Destroys the Entity.
 -- Removes the Entity from its World if it's in one.
--- @return self
+---@return ConcordEntity
 function Entity:destroy()
    if self.__world then
       self.__world:removeEntity(self)
@@ -179,7 +194,7 @@ function Entity:destroy()
 end
 
 -- Internal: Tells the World it's in that this Entity is dirty.
--- @return self
+---@return ConcordEntity
 function Entity:__dirty()
    if self.__world then
       self.__world:__dirtyEntity(self)
@@ -189,8 +204,8 @@ function Entity:__dirty()
 end
 
 --- Returns true if the Entity has a Component.
--- @tparam Component componentClass ComponentClass of the Component to check
--- @treturn boolean
+---@param name string
+---@return boolean
 function Entity:has(name)
    local ok, componentClass = Components.try(name)
 
@@ -202,8 +217,8 @@ function Entity:has(name)
 end
 
 --- Gets a Component from the Entity.
--- @tparam Component componentClass ComponentClass of the Component to get
--- @treturn table
+---@param name string
+---@return ConcordComponent
 function Entity:get(name)
    local ok, componentClass = Components.try(name)
 
@@ -217,7 +232,8 @@ end
 --- Returns a table of all Components the Entity has.
 -- Warning: Do not modify this table.
 -- Use Entity:give/ensure/remove instead
--- @treturn table Table of all Components the Entity has
+---@param output table<string, ConcordComponent>?
+---@return table<string, ConcordComponent> Table of all Components the Entity has
 function Entity:getComponents(output)
    output = output or {}
    local components = Utils.shallowCopy(self, output)
@@ -228,13 +244,13 @@ function Entity:getComponents(output)
 end
 
 --- Returns true if the Entity is in a World.
--- @treturn boolean
+---@return boolean
 function Entity:inWorld()
    return self.__world and true or false
 end
 
 --- Returns the World the Entity is in.
--- @treturn World
+---@return ConcordWorld
 function Entity:getWorld()
    return self.__world
 end
@@ -275,6 +291,7 @@ function Entity:deserialize(data)
 end
 
 return setmetatable(Entity, {
+    ---@return ConcordEntity
    __call = function(_, ...)
       return Entity.new(...)
    end,

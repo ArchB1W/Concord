@@ -7,12 +7,14 @@
 local PATH = (...):gsub('%.[^%.]+$', '')
 
 local Filter     = require(PATH..".filter")
+---@type ConcordEntity
 local Entity     = require(PATH..".entity")
 local Components = require(PATH..".components")
 local Type       = require(PATH..".type")
 local List       = require(PATH..".list")
 local Utils      = require(PATH..".utils")
 
+---@class ConcordWorld
 local World = {
    ENABLE_OPTIMIZATION = true,
 }
@@ -27,7 +29,7 @@ local defaultGenerator = function (state)
 end
 
 --- Creates a new World.
--- @treturn World The new World
+---@return ConcordWorld The new World
 function World.new()
    local world = setmetatable({
       __entities = List(),
@@ -67,8 +69,8 @@ function World.new()
 end
 
 --- Adds an Entity to the World.
--- @tparam Entity e Entity to add
--- @treturn World self
+---@param e Entity Entity to add
+---@return ConcordWorld self
 function World:addEntity(e)
    if not Type.isEntity(e) then
       Utils.error(2, "bad argument #1 to 'World:addEntity' (Entity expected, got %s)", type(e))
@@ -85,7 +87,7 @@ function World:addEntity(e)
 end
 
 --- Creates a new Entity and adds it to the World.
--- @treturn Entity e the new Entity
+---@return ConcordEntity The new Entity
 function World:newEntity()
    return Entity(self)
 end
@@ -112,8 +114,8 @@ function World:query(def, onMatch)
 end
 
 --- Removes an Entity from the World.
--- @tparam Entity e Entity to remove
--- @treturn World self
+---@param e ConcordEntity Entity to remove
+---@return ConcordWorld self
 function World:removeEntity(e)
    if not Type.isEntity(e) then
       Utils.error(2, "bad argument #1 to 'World:removeEntity' (Entity expected, got %s)", type(e))
@@ -133,7 +135,8 @@ function World:removeEntity(e)
 end
 
 -- Internal: Marks an Entity as dirty.
--- @param e Entity to mark as dirty
+---@param e ConcordEntity to mark as dirty
+---@return nil
 function World:__dirtyEntity(e)
    if not self.__dirty:has(e) then
       self.__dirty:add(e)
@@ -142,7 +145,7 @@ end
 
 -- Internal: Flushes all changes to Entities.
 -- This processes all entities. Adding and removing entities, as well as reevaluating dirty entities.
--- @treturn World self
+---@return ConcordWorld self
 function World:__flush()
    -- Early out
    if (self.__added.size == 0 and self.__removed.size == 0 and self.__dirty.size == 0) then
@@ -211,7 +214,9 @@ local blacklistedSystemFunctions = {
    "onDisabled",
 }
 
-local tryAddSystem = function (world, systemClass)
+---@param world ConcordWorld
+---@param systemClass ConcordSystem
+local function tryAddSystem(world, systemClass)
    if (not Type.isSystemClass(systemClass)) then
       return false, "SystemClass expected, got "..type(systemClass)
    end
@@ -251,12 +256,12 @@ local tryAddSystem = function (world, systemClass)
    return true
 end
 
---- Adds a System to the World.
+-- Adds a System to the World.
 -- Callbacks are registered automatically
 -- Entities added before are added to the System retroactively
--- @see World:emit
--- @tparam System systemClass SystemClass of System to add
--- @treturn World self
+---@see ConcordWorld.emit
+---@param systemClass ConcordSystem SystemClass of System to add
+---@return ConcordWorld self
 function World:addSystem(systemClass)
    local ok, err = tryAddSystem(self, systemClass)
 
@@ -269,10 +274,10 @@ end
 
 --- Adds multiple Systems to the World.
 -- Callbacks are registered automatically
--- @see World:addSystem
--- @see World:emit
--- @param ... SystemClasses of Systems to add
--- @treturn World self
+---@see ConcordWorld.addSystem
+---@see ConcordWorld.emit
+---@param ... ConcordSystem System Classes of Systems to add
+---@return ConcordWorld self
 function World:addSystems(...)
    for i = 1, select("#", ...) do
       local systemClass = select(i, ...)
@@ -287,8 +292,8 @@ function World:addSystems(...)
 end
 
 --- Returns if the World has a System.
--- @tparam System systemClass SystemClass of System to check for
--- @treturn boolean
+---@param systemClass ConcordSystem SystemClass of System to check for
+---@return boolean
 function World:hasSystem(systemClass)
    if not Type.isSystemClass(systemClass) then
       Utils.error(2, "bad argument #1 to 'World:hasSystem' (SystemClass expected, got %s)", type(systemClass))
@@ -298,8 +303,8 @@ function World:hasSystem(systemClass)
 end
 
 --- Gets a System from the World.
--- @tparam System systemClass SystemClass of System to get
--- @treturn System System to get
+---@param systemClass ConcordSystem SystemClass of System to get
+---@return ConcordSystem System to get
 function World:getSystem(systemClass)
    if not Type.isSystemClass(systemClass) then
       Utils.error(2, "bad argument #1 to 'World:getSystem' (SystemClass expected, got %s)", type(systemClass))
@@ -310,9 +315,9 @@ end
 
 --- Emits a callback in the World.
 -- Calls all functions with the functionName of added Systems
--- @string functionName Name of functions to call.
--- @param ... Parameters passed to System's functions
--- @treturn World self
+---@param functionName string Name of functions to call.
+---@param ... any Parameters passed to System's functions
+---@return ConcordWorld self
 function World:emit(functionName, ...)
    if not functionName or type(functionName) ~= "string" then
       Utils.error(2, "bad argument #1 to 'World:emit' (String expected, got %s)", type(functionName))
@@ -357,7 +362,7 @@ function World:emit(functionName, ...)
 end
 
 --- Removes all entities from the World
--- @treturn World self
+---@return ConcordWorld self
 function World:clear()
    for i = 1, self.__entities.size do
       self:removeEntity(self.__entities[i])
@@ -482,32 +487,35 @@ function World:getEntityByKey(key)
 end
 
 --- Callback for when an Entity is added to the World.
--- @tparam Entity e The Entity that was added
+---@param e ConcordEntity The Entity that was added
+---@return any
 function World:onEntityAdded(e) -- luacheck: ignore
 end
 
 --- Callback for when an Entity is removed from the World.
--- @tparam Entity e The Entity that was removed
+---@param e ConcordEntity The Entity that was removed
+---@return any
 function World:onEntityRemoved(e) -- luacheck: ignore
 end
 
 --- Sets a named resource in the world
--- @string name Name of the resource
--- @tparam Any resource Resource to set
--- @treturn World self
+---@param name string Name of the resource
+---@param resource any Resource to set
+---@return ConcordWorld self
 function World:setResource(name, resource)
   self.__resources[name] = resource
   return self
 end
 
 --- Gets a named resource from the world
--- @string name Name of the resource
--- @treturn Any resource
+---@param name string Name of the resource
+---@return ConcordComponent
 function World:getResource(name)
   return self.__resources[name]
 end
 
 return setmetatable(World, {
+    ---@return ConcordWorld
    __call = function(_, ...)
       ---@diagnostic disable-next-line: redundant-parameter
       return World.new(...)
