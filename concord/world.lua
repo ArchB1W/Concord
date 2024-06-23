@@ -69,7 +69,7 @@ function World.new()
 end
 
 --- Adds an Entity to the World.
----@param e Entity Entity to add
+---@param e ConcordEntity Entity to add
 ---@return ConcordWorld self
 function World:addEntity(e)
    if not Type.isEntity(e) then

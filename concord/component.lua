@@ -13,7 +13,7 @@ Component.__mt = {
 }
 
 --- Creates a new ComponentClass.
----@param populate fun(...): ConcordComponent Function that populates a Component with values
+---@param populate nil | fun(ConcordComponent, ...): nil Function that populates a Component with values
 ---@return ConcordComponent
 function Component.new(name, populate)
    if (type(name) ~= "string") then

@@ -38,7 +38,6 @@ Concord.entity     = require(PATH..".entity")
 Concord.component  = require(PATH..".component")
 ---@type table<string, ConcordComponent>
 Concord.components = require(PATH..".components")
----@type ConcordSystem
 Concord.system     = require(PATH..".system")
 ---@type ConcordWorld
 Concord.world      = require(PATH..".world")
