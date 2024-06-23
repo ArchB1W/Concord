@@ -3,6 +3,13 @@
 
 local PATH = (...):gsub('%.init$', '')
 
+---@class Concord
+---@field entity ConcordEntity
+---@field component ConcordComponent
+---@field components table<string, ConcordComponent>
+---@field system ConcordSystem
+---@field world ConcordWorld
+---@field utils ConcordUtils
 local Concord = {
    _VERSION     = "3.0",
    _DESCRIPTION = "A feature-complete ECS library",
@@ -32,14 +39,10 @@ local Concord = {
    ]]
 }
 
----@type ConcordEntity
 Concord.entity     = require(PATH..".entity")
----@type ConcordComponent
 Concord.component  = require(PATH..".component")
----@type table<string, ConcordComponent>
 Concord.components = require(PATH..".components")
 Concord.system     = require(PATH..".system")
----@type ConcordWorld
 Concord.world      = require(PATH..".world")
 Concord.utils      = require(PATH..".utils")
 

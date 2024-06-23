@@ -1,15 +1,17 @@
 --- Utils
 -- Helper module for misc operations
 
+---@class ConcordUtils
 local Utils = {}
 
 function Utils.error(level, str, ...)
     error(string.format(str, ...), level + 1)
 end
 
---- Does a shallow copy of a table and appends it to a target table.
--- @param orig Table to copy
--- @param target Table to append to
+--- Does a shallow copy of a table and appends it to a target table in place.
+---@param orig table To copy
+---@param target table To append to
+---@return table target Target table
 function Utils.shallowCopy(orig, target)
    for key, value in pairs(orig) do
       target[key] = value
@@ -21,9 +23,9 @@ end
 --- Requires files and puts them in a table.
 -- Accepts a table of paths to Lua files: {"path/to/file_1", "path/to/another/file_2", "etc"}
 -- Accepts a path to a directory with Lua files: "my_files/here"
--- @param pathOrFiles The table of paths or a path to a directory.
--- @param namespace A table that will hold the required files
--- @treturn table The namespace table
+---@param pathOrFiles string | string[] The table of paths or a path to a directory.
+---@param namespace table A table that will hold the required files
+---@return table # The namespace table
 function Utils.loadNamespace(pathOrFiles, namespace)
    if type(pathOrFiles) ~= "string" and type(pathOrFiles) ~= "table" then
        Utils.error(2, "bad argument #1 to 'loadNamespace' (string/table of strings expected, got %s)", type(pathOrFiles))

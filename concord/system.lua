@@ -8,6 +8,7 @@ local PATH = (...):gsub('%.[^%.]+$', '')
 local Filter     = require(PATH..".filter")
 local Utils      = require(PATH..".utils")
 
+---@class ConcordSystem
 local System = {
    ENABLE_OPTIMIZATION = true,
 }
@@ -45,8 +46,8 @@ System.mt = {
    end,
 }
 --- Creates a new SystemClass.
--- @param table filters A table containing filters (name = {components...})
--- @treturn System A new SystemClass
+---@param definition {string: string[]} A table containing filters like (name = {components...})
+---@return ConcordSystem inst A new ConcordSystem
 function System.new(definition)
    definition = definition or {}
 
@@ -60,10 +61,11 @@ function System.new(definition)
 
    local systemClass = setmetatable({
       __definition = definition,
-
       __isSystemClass = true,
    }, System.mt)
+   ---@diagnostic disable-next-line: inject-field
    systemClass.__index = systemClass
+
 
    -- Optimization: We deep copy the World class into our instance of a world.
    -- This grants slightly faster access times at the cost of memory.
@@ -76,8 +78,8 @@ function System.new(definition)
 end
 
 -- Internal: Evaluates an Entity for all the System's Pools.
--- @param e The Entity to check
--- @treturn System self
+---@param e ConcordEntity The Entity to check
+---@return self self
 function System:__evaluate(e)
    for _, filter in ipairs(self.__filters) do
       filter:evaluate(e)
@@ -87,8 +89,8 @@ function System:__evaluate(e)
 end
 
 -- Internal: Removes an Entity from the System.
--- @param e The Entity to remove
--- @treturn System self
+---@param e ConcordEntity The Entity to remove
+---@return self self
 function System:__remove(e)
    for _, filter in ipairs(self.__filters) do
       if filter:has(e) then
@@ -100,7 +102,7 @@ function System:__remove(e)
 end
 
 -- Internal: Clears all Entities from the System.
--- @treturn System self
+---@return self self
 function System:__clear()
    for _, filter in ipairs(self.__filters) do
       filter:clear()
@@ -110,8 +112,8 @@ function System:__clear()
 end
 
 --- Sets if the System is enabled
--- @tparam boolean enable
--- @treturn System self
+---@param enable boolean
+---@return self self
 function System:setEnabled(enable)
    if (not self.__enabled and enable) then
       self.__enabled = true
@@ -124,14 +126,12 @@ function System:setEnabled(enable)
    return self
 end
 
---- Returns is the System is enabled
--- @treturn boolean
+---@return boolean # Whether the System is enabled
 function System:isEnabled()
    return self.__enabled
 end
 
---- Returns the World the System is in.
--- @treturn World
+---@return ConcordSystem # The World the System is in.
 function System:getWorld()
    return self.__world
 end
@@ -140,15 +140,19 @@ end
 -- @section Callbacks
 
 --- Callback for system initialization.
--- @tparam World world The World the System was added to
+---@param world ConcordWorld The World the System was added to
+---@return nil
+---@diagnostic disable-next-line: unused-local
 function System:init(world) -- luacheck: ignore
 end
 
 --- Callback for when a System is enabled.
+---@return nil
 function System:onEnabled() -- luacheck: ignore
 end
 
 --- Callback for when a System is disabled.
+---@return nil
 function System:onDisabled() -- luacheck: ignore
 end
 
