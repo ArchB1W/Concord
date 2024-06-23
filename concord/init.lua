@@ -6,7 +6,7 @@ local PATH = (...):gsub('%.init$', '')
 ---@class Concord
 ---@field entity ConcordEntity
 ---@field component ConcordComponent
----@field components table<string, ConcordComponent>
+---@field components ConcordComponents
 ---@field system ConcordSystem
 ---@field world ConcordWorld
 ---@field utils ConcordUtils

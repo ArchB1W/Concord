@@ -1,6 +1,7 @@
 --- Container for registered ComponentClasses
 -- @module Components
 
+---@class ConcordComponents
 local Components = {}
 
 Components.__REJECT_PREFIX = "!"
@@ -26,11 +27,11 @@ end
 
 --- Returns true and the ComponentClass if one was registered with the specified name
 -- or false and an error otherwise
--- @string name Name of the ComponentClass to check
--- @boolean acceptRejected Whether to accept names prefixed with the Reject Prefix.
--- @treturn boolean
--- @treturn Component or error string
--- @treturn true if acceptRejected was true and the name had the Reject Prefix, false otherwise.
+---@param name string Name of the ComponentClass to check
+---@param acceptRejected boolean? Whether to accept names prefixed with the Reject Prefix.
+---@return boolean
+---@return ConcordComponent | string # Component or error string
+---@return boolean? # If acceptRejected was true and the name had the Reject Prefix, false otherwise.
 function Components.try(name, acceptRejected)
    if type(name) ~= "string" then
       return false, "ComponentsClass name is expected to be a string, got "..type(name)..")"
@@ -52,22 +53,24 @@ function Components.try(name, acceptRejected)
    return true, value, rejected
 end
 
---- Returns the ComponentClass with the specified name
--- @string name Name of the ComponentClass to get
--- @treturn Component
+--- Returns the component with the specified name
+---@param name string Name of the ComponentClass to get
+---@return ConcordComponent
 function Components.get(name)
    local ok, value = Components.try(name)
 
    if not ok then error(value, 2) end
 
+   -- If the try call is `not ok` the second return is always an error string so we can ignore this diagnostic
+   ---@diagnostic disable-next-line: return-type-mismatch
    return value
 end
 
 return setmetatable(Components, {
-   __index = function(_, name)
-      local ok, value = Components.try(name)
-
-      if not ok then error(value, 2) end
-
-      return value    end
+    --- Returns the component with the specified name
+    ---@param name string Name of the ComponentClass to get
+    ---@return ConcordComponent
+    __index = function(_, name)
+        Components.get(name)
+    end
 })
