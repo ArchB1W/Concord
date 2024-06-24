@@ -169,7 +169,7 @@ function Entity:remove(name)
 end
 
 --- Assembles an Entity.
----@param assemblage fun(...): ConcordEntity Function that will assemble an entity
+---@param assemblage fun(e: ConcordEntity, ...): ConcordEntity Function that will assemble an entity
 ---@param ... any additional arguments to pass to the assemblage function.
 ---@return ConcordEntity self
 function Entity:assemble(assemblage, ...)
