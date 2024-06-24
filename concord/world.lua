@@ -509,7 +509,7 @@ end
 
 --- Gets a named resource from the world
 ---@param name string Name of the resource
----@return ConcordComponent
+---@return any resource
 function World:getResource(name)
   return self.__resources[name]
 end
