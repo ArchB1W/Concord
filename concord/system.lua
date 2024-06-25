@@ -131,7 +131,7 @@ function System:isEnabled()
    return self.__enabled
 end
 
----@return ConcordSystem # The World the System is in.
+---@return ConcordWorld # The World the System is in.
 function System:getWorld()
    return self.__world
 end
